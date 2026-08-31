@@ -1,0 +1,13 @@
+{
+  "name": "claude-slice",
+  "owner": {
+    "name": "Mohamed El Shaari",
+    "url": "https://github.com/HamadiSan"
+  },
+  "plugins": [
+    {
+      "name": "slice",
+      "source": "./plugins/slice"
+    }
+  ]
+}

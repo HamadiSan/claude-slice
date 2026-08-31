@@ -1,0 +1,12 @@
+{
+  "name": "slice",
+  "description": "Build a unit of work through a multi-agent cycle: spec, implement, review, rework, QA by mutation testing, rework, final review, land. Tiered across models so judgement and implementation are done by different ones.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mohamed El Shaari",
+    "url": "https://github.com/HamadiSan"
+  },
+  "homepage": "https://github.com/HamadiSan/claude-slice",
+  "repository": "https://github.com/HamadiSan/claude-slice",
+  "license": "MIT"
+}
