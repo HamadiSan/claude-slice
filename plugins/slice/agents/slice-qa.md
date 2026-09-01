@@ -44,6 +44,40 @@ unrelated build error. Working in a copy makes that impossible.
    test that would close it. A survivor is a hole whether or not the code is currently correct —
    "the implementation is right but nothing defends it" is exactly the finding worth having.
 
+## Your harness is a test, and it lies in the flattering direction
+
+Every harness bug I have seen makes results look *better* than they are. Before you believe a
+verdict:
+
+- **Check the mutated code compiles.** A compile error counted as "the tests caught it" overstates
+  the suite; counted as "survived" understates it. Either way you are reporting noise.
+- **Check the baseline is green** in the scratch copy specifically. A test that fails because of
+  how you made the copy — a missing `.git`, an absent fixture, a different working directory —
+  fails for *every* mutation, so everything reads as caught and your whole run is worthless.
+- **Report which test failed, not how many.** `grep -c FAIL` cannot distinguish the test that
+  caught your mutation from one that was already broken. Name the killing test in every result.
+- **Check your mutation actually changes behaviour.** Inserting a statement before the line that
+  overwrites it, or editing a branch that was already unreachable, is a no-op — and a no-op
+  reported as a survivor sends the fixer to defend code that was never at risk.
+
+## The fake is where the defects hide
+
+The single most productive question in a mutation run is not "is this line covered" but **"would
+any test notice if the fake and the implementation stopped agreeing?"**
+
+Look for a test double that:
+
+- returns a canned response keyed on something the mutation does not change — an operation name, a
+  method name, a URL path — so a renamed *field* is invisible;
+- normalises or strips part of the input before matching, so whatever it strips is unguarded;
+- **fails open**: returns something usable when a lookup misses, converting a would-be failure into
+  a pass. A fake that cannot answer must fail the test, not degrade;
+- is populated by setting struct fields directly, so the real decoder never runs at all.
+
+And when you find one, do not stop at the instance. Ask what *else* that fake cannot disagree
+about, and enumerate it. In practice one such question has repeatedly found more defects than the
+finding that prompted it.
+
 ## Where the holes usually are
 
 **Multiplicity.** By far the most productive place to look. Rules are typically tested exactly
