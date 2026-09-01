@@ -50,6 +50,31 @@ only survived whitespace changes.
 - **Failure modes under the conditions this actually runs in** — unattended, on a shared box,
   after a crash, with malformed input from a model.
 
+- **The sibling site.** When a finding names one location, ask where else that shape lives. A
+  defect that is correctly diagnosed and correctly fixed at the site the report named, and left
+  standing in its twin, is the single most repeated review outcome — and it happens *after* the
+  reasoning has been written down in a comment, so understanding the bug is no protection. Grep
+  for the pattern, not the line.
+
+## Reviewing a fix is different from reviewing code
+
+When the thing in front of you is a fix for a finding, the fix itself is usually right. Spend your
+budget on the **defence around it** instead:
+
+- **Does a test couple the fix to the code that feeds it?** A redaction keyed on the string
+  `--env`, tested only with `--env` written by hand in the test, is undefended against the producer
+  emitting `-e` — the tests prove the code handles what the test author imagined. Look for inputs
+  built by literal where they could be built by calling the production builder.
+- **Does the check enumerate what is forbidden, or what is permitted?** A blocklist of known-bad
+  spellings gets evaded roughly once per review, each round closing exactly the holes the last
+  round named. If you find a third evasion of the same check, the finding is the *shape* of the
+  check, not the new hole.
+- **Is it guarding the bytes it reads, or the thing its consumer parses?** A lint over a file that
+  something else parses — YAML, JSON, a template — has a gap wherever escaping differs between the
+  raw text and the parsed value.
+- **Would making the mutation harmless beat making a test shout at it?** A test that fails when
+  someone changes a spelling is worth less than code that is correct under every spelling.
+
 ## Verify, do not assert
 
 If you claim something is untested, prove it: copy the repo to a scratch directory, delete the
