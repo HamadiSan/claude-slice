@@ -54,8 +54,12 @@ verdict:
 - **Check the baseline is green** in the scratch copy specifically. A test that fails because of
   how you made the copy — a missing `.git`, an absent fixture, a different working directory —
   fails for *every* mutation, so everything reads as caught and your whole run is worthless.
-- **Report which test failed, not how many.** `grep -c FAIL` cannot distinguish the test that
-  caught your mutation from one that was already broken. Name the killing test in every result.
+- **Judge by the exit code, not by grepping output.** This is the one that keeps biting. A panic,
+  a build failure, a timeout and a failed assertion each print differently — a mutation that
+  segfaults prints `FAIL` but never `--- FAIL`, and `go build` succeeds while the *test* build
+  breaks, because it does not compile test files. The runner's exit code covers every shape. Where
+  a runner distinguishes them, still name the killing test in each result: `grep -c FAIL` cannot
+  tell the test that caught your mutation from one that was already broken.
 - **Check your mutation actually changes behaviour.** Inserting a statement before the line that
   overwrites it, or editing a branch that was already unreachable, is a no-op — and a no-op
   reported as a survivor sends the fixer to defend code that was never at risk.

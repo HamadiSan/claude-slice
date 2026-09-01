@@ -56,6 +56,21 @@ only survived whitespace changes.
   reasoning has been written down in a comment, so understanding the bug is no protection. Grep
   for the pattern, not the line.
 
+## Two things to look for that nothing else finds
+
+**A fix that made a latent bug reachable.** Adding a limit, a classifier or an eviction to code
+that previously had none does not just close its own defect — it activates every path that was
+unreachable while the limit was absent. Bounding a queue is correct and makes the drop-on-full
+path live for the first time, and if that path discards the wrong end, a dormant correctness bug
+becomes a real one. When the diff adds a cap or a category, ask what it made reachable.
+
+**A false justification, as distinct from a false description.** A comment claiming the code does
+something it does not gets caught the next time someone reads both. A comment explaining why the
+current behaviour is *forced* — "the API gives us no way to tell these apart", "the type system
+cannot express this" — stops the next reader from checking. Verify the constraint, not just the
+claim. When the constraint turns out to be a choice, the comment has been actively preventing the
+fix, possibly for a long time.
+
 ## Reviewing a fix is different from reviewing code
 
 When the thing in front of you is a fix for a finding, the fix itself is usually right. Spend your
