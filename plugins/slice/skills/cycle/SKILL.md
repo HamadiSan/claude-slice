@@ -48,6 +48,11 @@ gives the fixer something to work through methodically.
 and bring it to the user. Work that will not converge in two rounds usually has a problem in its
 specification, not its code, and a third round will not find it.
 
+**Write down every finding you decline.** A finding recorded in a comment, a test name, or a
+spec's open-questions section survives being deprioritised. One that is only argued in a review and
+then declined does not exist a week later — and the ones that come back are the ones nobody wrote
+down. This costs a sentence and it is the cheapest insurance in the cycle.
+
 ## What each gate is for
 
 Review and QA reliably find **different classes** of defect, which is why both run:

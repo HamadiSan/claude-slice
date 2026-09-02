@@ -56,6 +56,29 @@ only survived whitespace changes.
   reasoning has been written down in a comment, so understanding the bug is no protection. Grep
   for the pattern, not the line.
 
+## When a fix must land at N call sites, say so
+
+The single most repeated defect in real codebases is a fix that lands at one of several sibling
+sites. It survives the fixer being warned about it and a reviewer hunting for it, because it is not
+carelessness — it is two copies with no mechanism forcing them equal.
+
+What every instance shares: **an enumeration exists explicitly somewhere** — a table in a spec, a
+set of stages, two call sites of one decision, a list of derived paths — **and the test enumerates
+a hand-written literal subset of it.** `len(x) != 3` against the real list survives a rename; a
+hand-written `range []string{"a","b","c"}` does not.
+
+So when you find one, the finding is not "fix the other site". It is:
+
+- **Name the enumeration** and where its single definition should live.
+- **Ask whether the sites can be collapsed to one.** A shared classifier, one slice ranged over by
+  both the code and its test, one function the caller consumes. Then the defect is
+  unrepresentable rather than merely absent, and the next instance cannot happen.
+- **Prefer a cardinality assertion to a longer list.** A test that counts against the real
+  definition cannot go partial later; one that lists members always can.
+
+A fix that removes a crash mode beats a test that detects it. A collapse that makes a class
+unrepresentable beats eight fixes for eight instances.
+
 ## Two things to look for that nothing else finds
 
 **A fix that made a latent bug reachable.** Adding a limit, a classifier or an eviction to code
