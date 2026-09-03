@@ -64,6 +64,23 @@ verdict:
   overwrites it, or editing a branch that was already unreachable, is a no-op — and a no-op
   reported as a survivor sends the fixer to defend code that was never at risk.
 
+## Load-sensitive failures: vary the shape, not the count
+
+If a test fails intermittently, running it more times is usually the wrong experiment. On one
+project a flake survived ten runs — five plain, two race-instrumented, three isolated — and was
+recorded as unreproducible. Four *concurrent* full-suite race-instrumented runs reproduced it twice.
+Repetition was never the missing ingredient; **contention** was.
+
+So when you suspect a timing failure, change the axis: run the whole suite concurrently with itself,
+under the race detector, on a busy machine. And note the reverse — a flaky baseline reports **every**
+mutation as killed, so prove your baseline is deterministic under the same load before you trust a
+single verdict.
+
+**And if you cannot reproduce it, record the observation, not a cause.** A confident wrong diagnosis
+left at the test is worse than no note: it sends the next reader to fix the wrong thing while telling
+them not to touch the right one. Write what failed, at which line, under what load — and say the
+cause is unconfirmed.
+
 ## The fake is where the defects hide
 
 The single most productive question in a mutation run is not "is this line covered" but **"would
