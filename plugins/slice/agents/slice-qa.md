@@ -64,6 +64,30 @@ verdict:
   overwrites it, or editing a branch that was already unreachable, is a no-op — and a no-op
   reported as a survivor sends the fixer to defend code that was never at risk.
 
+## Fixtures that cannot disagree
+
+The hardest defect to see is not in the code or the double — it is in the **test data**. A fixture
+set can be chosen, entirely by accident, so that a correct implementation and a wrong one produce
+identical output on every case. Then the assertion passes either way and the property is untested
+while looking covered.
+
+Real instances, all found by mutation and all invisible to review:
+
+- identifiers where none is a prefix of another, so an exact match and a substring match agree
+- a fixture where every row matches the filter, so the filtered slice and the full slice are the
+  same slice
+- two of an enum's eleven values, so two different predicates agree
+- ground truth read from a harness whose value **is** the zero value, so "decoded correctly" and
+  "not decoded at all" render identically
+
+So when a mutation survives and the code looks right, **suspect the fixture before the assertion.**
+Ask what a wrong implementation would print; if the answer is "the same thing", you have found it.
+
+The fix is never a better fixture — that is how this recurs. Assert a **relation no fixture can
+satisfy accidentally**: the shown set equals the acted-on set; the count equals both; the test
+*ranges* the enumeration rather than sampling it; fixture values are non-zero and mutually distinct
+so a field swap cannot pass.
+
 ## Load-sensitive failures: vary the shape, not the count
 
 If a test fails intermittently, running it more times is usually the wrong experiment. On one
