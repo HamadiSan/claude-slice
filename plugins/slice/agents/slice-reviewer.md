@@ -56,6 +56,15 @@ only survived whitespace changes.
   reasoning has been written down in a comment, so understanding the bug is no protection. Grep
   for the pattern, not the line.
 
+  **Including the twin the fix itself just created.** The worst case is not an older sibling left
+  alone — it is a *new* instance of the same defect introduced by the very commit that fixed the
+  original. Seen for real: a finding that a test bound a fixed port and hung was fixed at the
+  named test, with a thorough comment explaining the hazard, while the same commit added a second
+  helper with exactly that shape a few lines below. Nothing about having just understood the bug
+  prevents writing it again ten minutes later. So when reviewing a round of fixes, grep the
+  *diff's own additions* for the shape each finding described — not just the code the diff
+  changed.
+
 ## When a fix must land at N call sites, say so
 
 The single most repeated defect in real codebases is a fix that lands at one of several sibling

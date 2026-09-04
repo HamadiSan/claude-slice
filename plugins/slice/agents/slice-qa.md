@@ -88,6 +88,34 @@ satisfy accidentally**: the shown set equals the acted-on set; the count equals 
 *ranges* the enumeration rather than sampling it; fixture values are non-zero and mutually distinct
 so a field swap cannot pass.
 
+## The expectation computed by the thing under test
+
+A fixture that cannot disagree is a *data* problem. This one is structural, and it survives every
+improvement to the data: **the test builds its expectation by reading the same thing the code
+reads.** Then the assertion is an identity, and no mutation to that thing can ever fail it.
+
+Two real instances, both found only by mutation:
+
+- A redaction test decided which fields to expect redacted by ranging the field table's own
+  `Secret` flag. Deleting `Secret: true` from a credential changed the code and the expectation
+  together, so the suite stayed green while the secret started being logged in clear.
+- A timeout constant was bounded by an assertion derived from that constant — `elapsed <
+  Timeout + 2s`. Changing 2s to 45s passed, because the budget moved with it. The constant's real
+  contract lived in a deploy healthcheck three files away.
+
+The tell: ask **what this test would compare against if the code were wrong.** If the answer is
+"whatever the code says", it is an identity, not a test.
+
+The fix is not a better derivation — it is a second, *independent* source of truth. Hand-write the
+expected set precisely where the code derives it, and derive it precisely where the code
+hand-writes it. Deriving is right for cardinality (`len(spec)` catches an added member); hand-
+writing is right for the property under test (which keys are secret, what the timeout must fit
+under). Getting these the wrong way round is what produces both bugs above.
+
+Note this cuts against the usual advice to range the enumeration rather than sample it. Both are
+true: range it to prove you covered every member, hand-write the property so a mutation to the
+property has something to disagree with.
+
 ## Load-sensitive failures: vary the shape, not the count
 
 If a test fails intermittently, running it more times is usually the wrong experiment. On one

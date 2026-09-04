@@ -84,9 +84,13 @@ that landed while it ran. Commit messages at intermediate steps should say they 
 the tests and the linter after every step. An agent reporting success it did not achieve is rare
 but not rare enough, and you are the one landing this.
 
-**Pass findings through a file, not a prompt.** Write the review or QA output to a scratch file
-and point the next agent at it. Long findings pasted into a prompt lose structure, and a file
-gives the fixer something to work through methodically.
+**Pass findings through a file, not a prompt — and you are the one who writes it.** The gate
+agents have no write tools, deliberately: a reviewer that can edit what it is judging becomes a
+second unsupervised author. So a gate returns its findings in its final message and *you* write
+them to a scratch file, then point the fixer at that file. Do not instruct a gate to write the
+file itself; it will correctly refuse, and you will have spent a round trip on the refusal.
+Long findings pasted into a prompt lose their structure, and a file gives the fixer something to
+work through methodically.
 
 **Two cycles maximum.** If the final review still says DO NOT LAND after a second full pass, stop
 and bring it to the user. Work that will not converge in two rounds usually has a problem in its
