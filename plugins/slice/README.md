@@ -4,7 +4,7 @@ See the [repository README](../../README.md) for what this is and why.
 
 ```
 plugins/slice/
-├── skills/cycle/SKILL.md   the full eight-step cycle
+├── skills/cycle/SKILL.md   the full eight-step cycle, bracketed by the ticket
 ├── skills/quick/SKILL.md   the four-step version for small changes
 └── agents/
     ├── slice-spec.md       Fable 5  — reads the codebase, then decides, decisively

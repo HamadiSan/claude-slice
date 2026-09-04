@@ -13,7 +13,7 @@ Four steps, for work that does not justify seven agents.
 | 1 | Implement | `slice-coder` | Sonnet 5 |
 | 2 | Review | `slice-reviewer` | Opus 5 |
 | 3 | Address the review | `slice-coder` | Sonnet 5 |
-| 4 | Commit and push | you | — |
+| 4 | Commit, push, report to the ticket | you | — |
 
 No spec: for a change this size, the request is the spec. No mutation-testing pass: it costs more
 than it returns on a small diff, though the reviewer still reports untested guarantees it notices.
@@ -35,3 +35,11 @@ Commit before the review so the gate sees a frozen tree. Verify the build, tests
 yourself after each step rather than trusting the report. If the review finds something that
 changes the shape of the work — a design problem rather than a defect — stop and propose the full
 cycle instead of patching around it.
+
+## The ticket
+
+If the change came from a tracked ticket, read it first and post one comment when the run ends —
+on success and, more importantly, on failure or when you stop to propose the full cycle. Same
+rules as [the full cycle](../cycle/SKILL.md): one comment, at the end, comment rather than
+transition, and never claim you updated a tracker you could not reach. Small changes are the ones
+whose tickets go stale, because nobody thinks a two-line fix needs reporting.

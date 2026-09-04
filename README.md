@@ -2,7 +2,8 @@
 
 A Claude Code plugin that runs a unit of work through a multi-agent cycle — spec, implement,
 review, rework, mutation-test QA, rework, final review, land — with judgement and implementation
-deliberately done by different models.
+deliberately done by different models, and the outcome reported back to the ticket that asked
+for it.
 
 ```
 claude plugin marketplace add HamadiSan/claude-slice
@@ -17,6 +18,7 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 
 | # | Step | Model |
 |---|---|---|
+| 0 | Pick up the ticket | — |
 | 1 | Write the spec | Fable 5 |
 | 2 | Implement it | Sonnet 5 |
 | 3 | Code review | Opus 5 |
@@ -24,7 +26,7 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 | 5 | QA / mutation testing | Opus 5 |
 | 6 | Address QA | Sonnet 5 |
 | 7 | Final review | Opus 5 |
-| 8 | Document, commit, push | — |
+| 8 | Document, commit, push, report to the ticket | — |
 
 Two cycles maximum. Work that will not converge in two rounds usually has a problem in its
 specification rather than its code, and a third round will not find it.
@@ -51,6 +53,11 @@ abstractions the tree already has under another name — so the spec agent reads
 nearest existing component and the recurring idioms first, and then names the pattern it follows
 *with the path of the code it follows*. A decision left open in the spec still gets made: during
 implementation, inside one file, differently in each.
+
+**A failed cycle reports itself.** The success comment on a ticket is a convenience — there is a
+merged PR either way. The comment that matters is the one a cycle posts when it gives up, because
+the alternative is a ticket reading "in progress" forever, a branch nobody knows about, and
+someone finding out a week later. One comment, at the end, either way. Never a comment per step.
 
 **Reviewers get no write tools.** A reviewer that can edit what it is judging becomes a second
 unsupervised author.
