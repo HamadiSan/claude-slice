@@ -46,6 +46,12 @@ A single combined "quality" gate would be worse than both.
 The agent prompts are the point of the plugin. They carry the things a real run cost real time to
 learn:
 
+**The spec makes the architectural decisions.** Written from the request alone, a spec invents
+abstractions the tree already has under another name — so the spec agent reads the layout, the
+nearest existing component and the recurring idioms first, and then names the pattern it follows
+*with the path of the code it follows*. A decision left open in the spec still gets made: during
+implementation, inside one file, differently in each.
+
 **Reviewers get no write tools.** A reviewer that can edit what it is judging becomes a second
 unsupervised author.
 
