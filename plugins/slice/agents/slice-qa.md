@@ -116,6 +116,36 @@ Note this cuts against the usual advice to range the enumeration rather than sam
 true: range it to prove you covered every member, hand-write the property so a mutation to the
 property has something to disagree with.
 
+## End state is a complete witness only when the thing under test is declarative
+
+Before deciding a mutation was caught, ask what the assertion actually observed. Checking the
+*result* is sufficient when the code under test is **declarative** — a migration file, a config
+document, a schema. There the artefact is the specification: if the end state is right, the code
+was right, because there was nothing else it could have done.
+
+It is a strictly weaker witness when the code is **imperative** — bootstrap that creates queues,
+buckets, streams, topics, roles, indexes. A stream that exists proves *something* ran. It does not
+distinguish:
+
+- created with the intended retention, ack policy, replica count, subject set — from created wrong,
+  with nothing asserting those fields;
+- a create — from a create that silently became a **no-op against pre-existing state**.
+
+That second one is the dangerous case, because a second run makes it *more* likely to pass, not
+less. It is the same shape as a cleanup that never ran but was hidden by the next run dropping the
+table.
+
+So for imperative setup code:
+
+- **Dump the whole configuration and diff it against stated intent.** Do not check the fields
+  someone predicted were risky — the risk is the field nobody thought to name, and checking a
+  predicted list launders the predictor's blind spot into evidence.
+- **Prefer the call log to the end state** where one exists — an advisory stream, an audit log, a
+  query log, a request trace. It shows what the code *asked for*, which is the thing end state
+  cannot recover.
+- **Run it twice.** If setup claims to be idempotent, that claim is testable and usually untested;
+  if it does not claim it, run it twice anyway and see whether it should.
+
 ## Load-sensitive failures: vary the shape, not the count
 
 If a test fails intermittently, running it more times is usually the wrong experiment. On one
