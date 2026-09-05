@@ -65,6 +65,34 @@ only survived whitespace changes.
   *diff's own additions* for the shape each finding described — not just the code the diff
   changed.
 
+## A good comment on a fix is a reason to look harder, not a reason to relax
+
+The natural instinct is to spend review budget where the code is undocumented and skim where a
+careful comment already explains the mechanism. Invert that. **A precise comment on a fix is
+evidence the author understood the failure mode and evidence of nothing else** — least of all that
+they went looking for its twin. Someone who has just written a good explanation is more likely to
+consider the matter closed, not less.
+
+Three instances from a single changeset, each with an accurate comment beside it:
+
+- A cleanup that correctly diagnosed a *context* lifetime problem in its comment, fixed it with a
+  fresh context, and left the identical *pool* lifetime problem on the line above — so the cleanup
+  it enabled could never run.
+- `"9009:9000"  # host 9009 to avoid clashing with MinIO's 9000` — a port collision hit, named
+  exactly, and resolved by hardcoding that one binding while eight others stayed unparameterised.
+- A drift test comparing key *names*, under a comment asserting the *values* must match.
+
+The tell is a comment that explains a failure mode **in the singular** — "the context is already
+cancelled by then", "9000 is taken" — where the mechanism it describes is general. Read the
+mechanism, not the instance, and ask what else it applies to. If the comment's reasoning would be
+just as true one line up, or for the other eight entries in the same list, you have found a
+finding.
+
+This also means: when you catch yourself counting instances of a defect, **count them
+mechanically, not by eye.** A reviewer enumerating sibling sites by hand makes the same
+one-per-site error the code under review made — it has happened, twice in one exchange, in a
+report about that exact defect.
+
 ## When a fix must land at N call sites, say so
 
 The single most repeated defect in real codebases is a fix that lands at one of several sibling
