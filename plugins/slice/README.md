@@ -13,4 +13,10 @@ plugins/slice/
     └── slice-qa.md         Opus 5   — mutation-tests on a copy of the tree
 ```
 
-Models are pinned by full id (`claude-opus-5`, not `opus`) so the tiering survives alias drift.
+Those models are **defaults**. Each role is selectable per invocation (`--reviewer=opus`) or per
+project (`.slice.json` at the repo root) — see
+[Choosing the models](../../README.md#choosing-the-models).
+
+The frontmatter pins a full id (`claude-opus-5`, not `opus`) so the default tiering survives alias
+drift. The override takes the short alias instead, because that is what the `Agent` tool's `model`
+parameter accepts — so a resolved model is translated, never passed through as a long id.

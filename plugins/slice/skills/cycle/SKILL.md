@@ -1,7 +1,7 @@
 ---
 name: cycle
 description: Run a substantial piece of work through a full multi-agent cycle - spec, implement, review, rework, mutation-test QA, rework, final review, then land, then report the outcome back to the tracked ticket whether the cycle succeeded or failed. Use when implementing a new package, module, subsystem or feature of real size, or when the user asks for a thorough or high-assurance build. PROPOSE this before starting; do not run it unprompted, it is expensive.
-argument-hint: [what to build]
+argument-hint: [what to build] [--role=model ...]
 ---
 
 # The slice cycle
@@ -9,17 +9,60 @@ argument-hint: [what to build]
 A unit of work goes through eight steps, with judgement and implementation deliberately done by
 different models, bracketed by the ticket that asked for it.
 
-| # | Step | Agent | Model |
-|---|---|---|---|
-| 0 | Pick up the ticket | you | — |
-| 1 | Write the spec | `slice-spec` | Fable 5 |
-| 2 | Implement it | `slice-coder` | Sonnet 5 |
-| 3 | Code review | `slice-reviewer` | Opus 5 |
-| 4 | Address the review | `slice-coder` | Sonnet 5 |
-| 5 | QA / mutation testing | `slice-qa` | Opus 5 |
-| 6 | Address QA | `slice-coder` | Sonnet 5 |
-| 7 | Final review | `slice-reviewer` | Opus 5 |
-| 8 | Document, commit, push, report to the ticket | you | — |
+| # | Step | Agent | Role | Model (default) |
+|---|---|---|---|---|
+| 0 | Pick up the ticket | you | — | — |
+| 1 | Write the spec | `slice-spec` | `spec` | Fable 5 |
+| 2 | Implement it | `slice-coder` | `coder` | Sonnet 5 |
+| 3 | Code review | `slice-reviewer` | `reviewer` | Opus 5 |
+| 4 | Address the review | `slice-coder` | `coder` | Sonnet 5 |
+| 5 | QA / mutation testing | `slice-qa` | `qa` | Opus 5 |
+| 6 | Address QA | `slice-coder` | `coder` | Sonnet 5 |
+| 7 | Final review | `slice-reviewer` | `final-review` | Opus 5 |
+| 8 | Document, commit, push, report to the ticket | you | — | — |
+
+## Choosing the model for each role
+
+**The Model column is a default, not a fixture.** The `Agent` tool's `model` parameter overrides
+whatever an agent definition declares, so every role is selectable per invocation or per project.
+
+**Resolve each role's model in this order**, highest priority first:
+
+1. **What the user asked for in the invocation** —
+   `/slice:cycle OXN-13 --reviewer=opus --coder=haiku`.
+2. **The project's `.slice.json`**, if one exists at the repo root. Look for it once, at the
+   start of the run:
+   ```json
+   { "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
+   ```
+   It is checked in, so a team shares one answer instead of each person remembering flags.
+3. **The agent's own frontmatter** — the defaults in the table above.
+
+Then **pass the resolved model explicitly on every `Agent` call**, even when it matches the
+default. Relying on the frontmatter makes a run you cannot describe afterwards; passing it means
+you can say in the ticket comment which models actually ran.
+
+**Roles and values.** Four roles — `spec`, `coder`, `reviewer`, `qa` — plus an optional
+`final-review`, which falls back to `reviewer` when unset. One `coder` setting covers all three
+of its steps. Splitting `final-review` off is worth it when someone wants a cheap first pass and
+an expensive last word, since that is the gate that says land or do not land.
+
+Values are the short aliases the `Agent` tool accepts: `opus`, `sonnet`, `haiku`, `fable`. The
+agent files spell their defaults as full IDs (`claude-opus-5`) — translate to the alias rather
+than passing the long form through, which the tool will reject.
+
+**Name what you resolved before step 1**, in one line. Someone who set `coder=haiku` in
+`.slice.json` three weeks ago and forgot deserves to learn that before spending a cycle, not
+while reading the diff.
+
+**Reject a value you do not recognise instead of falling back to the default.** A typo'd
+`--reviewer=opus5` that silently runs something else is precisely the failure nobody catches
+until a gate has already missed something.
+
+**If asked to run every role on one model, do it — and say once what it costs.** This cycle's
+premise is that judgement and implementation come from *different* models; the gates earn their
+keep largely by not sharing the coder's blind spots. One model everywhere is a cheaper, weaker
+cycle. That is the user's call to make: recommend against it once, then run what they asked for.
 
 ## Before you start: propose, do not assume
 

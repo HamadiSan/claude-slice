@@ -1,7 +1,7 @@
 {
   "name": "slice",
-  "description": "Build a unit of work through a multi-agent cycle: spec, implement, review, rework, QA by mutation testing, rework, final review, land, report to the ticket. Tiered across models so judgement and implementation are done by different ones.",
-  "version": "0.5.0",
+  "description": "Build a unit of work through a multi-agent cycle: spec, implement, review, rework, QA by mutation testing, rework, final review, land, report to the ticket. Tiered across models so judgement and implementation are done by different ones; the model for each role is selectable per invocation or per project.",
+  "version": "0.6.0",
   "author": {
     "name": "Mohamed El Shaari",
     "url": "https://github.com/HamadiSan"

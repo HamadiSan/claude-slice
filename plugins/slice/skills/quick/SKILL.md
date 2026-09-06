@@ -1,22 +1,28 @@
 ---
 name: quick
 description: Run a small change through a light version of the slice cycle - implement, one review, fix, land. No spec and no mutation-testing pass. Use for bug fixes, single functions, config changes and anything where the full cycle would cost more than the change is worth.
-argument-hint: [what to change]
+argument-hint: [what to change] [--role=model ...]
 ---
 
 # The quick cycle
 
 Four steps, for work that does not justify seven agents.
 
-| # | Step | Agent | Model |
-|---|---|---|---|
-| 1 | Implement | `slice-coder` | Sonnet 5 |
-| 2 | Review | `slice-reviewer` | Opus 5 |
-| 3 | Address the review | `slice-coder` | Sonnet 5 |
-| 4 | Commit, push, report to the ticket | you | — |
+| # | Step | Agent | Role | Model (default) |
+|---|---|---|---|---|
+| 1 | Implement | `slice-coder` | `coder` | Sonnet 5 |
+| 2 | Review | `slice-reviewer` | `reviewer` | Opus 5 |
+| 3 | Address the review | `slice-coder` | `coder` | Sonnet 5 |
+| 4 | Commit, push, report to the ticket | you | — | — |
 
 No spec: for a change this size, the request is the spec. No mutation-testing pass: it costs more
 than it returns on a small diff, though the reviewer still reports untested guarantees it notices.
+
+**The models are defaults.** Both roles take the same overrides the full cycle uses — an
+invocation flag (`--reviewer=opus`), else `.slice.json` at the repo root, else the agent's
+frontmatter. Pass the resolved model explicitly on every `Agent` call, and name what you resolved
+before you start. Full rules and accepted values:
+[the full cycle](../cycle/SKILL.md#choosing-the-model-for-each-role).
 
 ## Use the full cycle instead when
 

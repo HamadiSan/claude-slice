@@ -16,20 +16,44 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 
 ## The cycle
 
-| # | Step | Model |
-|---|---|---|
-| 0 | Pick up the ticket | — |
-| 1 | Write the spec | Fable 5 |
-| 2 | Implement it | Sonnet 5 |
-| 3 | Code review | Opus 5 |
-| 4 | Address the review | Sonnet 5 |
-| 5 | QA / mutation testing | Opus 5 |
-| 6 | Address QA | Sonnet 5 |
-| 7 | Final review | Opus 5 |
-| 8 | Document, commit, push, report to the ticket | — |
+| # | Step | Role | Model (default) |
+|---|---|---|---|
+| 0 | Pick up the ticket | — | — |
+| 1 | Write the spec | `spec` | Fable 5 |
+| 2 | Implement it | `coder` | Sonnet 5 |
+| 3 | Code review | `reviewer` | Opus 5 |
+| 4 | Address the review | `coder` | Sonnet 5 |
+| 5 | QA / mutation testing | `qa` | Opus 5 |
+| 6 | Address QA | `coder` | Sonnet 5 |
+| 7 | Final review | `final-review` | Opus 5 |
+| 8 | Document, commit, push, report to the ticket | — | — |
 
 Two cycles maximum. Work that will not converge in two rounds usually has a problem in its
 specification rather than its code, and a third round will not find it.
+
+## Choosing the models
+
+Those are defaults. Set any role per invocation:
+
+```
+/slice:cycle OXN-13 --reviewer=opus --coder=haiku
+```
+
+…or per project, in a `.slice.json` at the repo root, so a team shares one answer instead of
+each person remembering flags:
+
+```json
+{ "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
+```
+
+An invocation flag beats `.slice.json`, which beats the agent's frontmatter. Values are `opus`,
+`sonnet`, `haiku` and `fable`. `final-review` is optional and falls back to `reviewer` — split it
+off when you want a cheap first pass and an expensive last word, since that is the gate that says
+land or do not land. The resolved models are named back to you before the run starts, and an
+unrecognised value is rejected rather than silently replaced by a default.
+
+You can run every role on one model. It is a cheaper, weaker cycle — the gates earn their keep
+largely by not sharing the coder's blind spots — so the skill will say so once and then do it.
 
 ## Why two gates and not one
 
