@@ -19,10 +19,11 @@ No spec: for a change this size, the request is the spec. No mutation-testing pa
 than it returns on a small diff, though the reviewer still reports untested guarantees it notices.
 
 **The models are defaults.** Both roles take the same overrides the full cycle uses — an
-invocation flag (`--reviewer=opus`), else `.slice.json` at the repo root, else the agent's
-frontmatter. Pass the resolved model explicitly on every `Agent` call, and name what you resolved
-before you start. Full rules and accepted values:
-[the full cycle](../cycle/SKILL.md#choosing-the-model-for-each-role).
+invocation flag (`--reviewer=opus`), else `.slice.json` at the repo root, else
+`~/.claude/slice.json`, else the agent's frontmatter. Pass the resolved model explicitly on every
+`Agent` call, and name what you resolved before you start. Full rules and accepted values:
+[the full cycle](../cycle/SKILL.md#choosing-the-model-for-each-role). To set them interactively,
+`/slice:models`.
 
 ## Use the full cycle instead when
 

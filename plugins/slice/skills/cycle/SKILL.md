@@ -30,13 +30,18 @@ whatever an agent definition declares, so every role is selectable per invocatio
 
 1. **What the user asked for in the invocation** —
    `/slice:cycle OXN-13 --reviewer=opus --coder=haiku`.
-2. **The project's `.slice.json`**, if one exists at the repo root. Look for it once, at the
-   start of the run:
+2. **The project's `.slice.json`**, if one exists at the repo root:
    ```json
    { "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
    ```
    It is checked in, so a team shares one answer instead of each person remembering flags.
-3. **The agent's own frontmatter** — the defaults in the table above.
+3. **The user's `~/.claude/slice.json`**, same shape — their standing preference across every
+   project on this machine.
+4. **The agent's own frontmatter** — the defaults in the table above.
+
+Read the two files once, at the start of the run. Either may set any subset of roles, so resolve
+role by role rather than taking the first file that exists whole. `/slice:models` is the
+interactive way to set them; nothing here requires that they were written by it.
 
 Then **pass the resolved model explicitly on every `Agent` call**, even when it matches the
 default. Relying on the frontmatter makes a run you cannot describe afterwards; passing it means

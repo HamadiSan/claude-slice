@@ -33,24 +33,32 @@ specification rather than its code, and a third round will not find it.
 
 ## Choosing the models
 
-Those are defaults. Set any role per invocation:
+Those are defaults. To see what is in effect and change it:
 
 ```
-/slice:cycle OXN-13 --reviewer=opus --coder=haiku
+/slice:models                 pick each role, then where to save it
+/slice:models show            just print the table and where each value came from
+/slice:models reviewer        change one role
 ```
 
-…or per project, in a `.slice.json` at the repo root, so a team shares one answer instead of
-each person remembering flags:
+It shows the model for every role **and where that value came from**, because the usual question
+is not "what should this be" but "why is it that". Choices persist to one of two files, both the
+same shape and both free to set any subset of roles:
 
 ```json
 { "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
 ```
 
-An invocation flag beats `.slice.json`, which beats the agent's frontmatter. Values are `opus`,
-`sonnet`, `haiku` and `fable`. `final-review` is optional and falls back to `reviewer` — split it
-off when you want a cheap first pass and an expensive last word, since that is the gate that says
-land or do not land. The resolved models are named back to you before the run starts, and an
-unrecognised value is rejected rather than silently replaced by a default.
+- `.slice.json` at the repo root — this project, checked in, shared with the team
+- `~/.claude/slice.json` — every project on your machine, yours alone
+
+Or set one for a single run: `/slice:cycle OXN-13 --reviewer=opus --coder=haiku`.
+
+A flag beats the project file, which beats the user file, which beats the frontmatter default.
+Values are `opus`, `sonnet`, `haiku` and `fable`. `final-review` is optional and falls back to
+`reviewer` — split it off when you want a cheap first pass and an expensive last word, since that
+is the gate that says land or do not land. The resolved models are named back to you before a run
+starts, and an unrecognised value is rejected rather than silently replaced by a default.
 
 You can run every role on one model. It is a cheaper, weaker cycle — the gates earn their keep
 largely by not sharing the coder's blind spots — so the skill will say so once and then do it.

@@ -6,6 +6,7 @@ See the [repository README](../../README.md) for what this is and why.
 plugins/slice/
 ├── skills/cycle/SKILL.md   the full eight-step cycle, bracketed by the ticket
 ├── skills/quick/SKILL.md   the four-step version for small changes
+├── skills/models/SKILL.md  interactive picker: which model each role runs on
 └── agents/
     ├── slice-spec.md       Fable 5  — reads the codebase, then decides, decisively
     ├── slice-coder.md      Sonnet 5 — implements and reworks, licensed to disagree
@@ -13,8 +14,9 @@ plugins/slice/
     └── slice-qa.md         Opus 5   — mutation-tests on a copy of the tree
 ```
 
-Those models are **defaults**. Each role is selectable per invocation (`--reviewer=opus`) or per
-project (`.slice.json` at the repo root) — see
+Those models are **defaults**. `/slice:models` shows what is in effect, where each value came
+from, and writes a change to `.slice.json` (this project) or `~/.claude/slice.json` (all
+projects); `--reviewer=opus` overrides either for one run. See
 [Choosing the models](../../README.md#choosing-the-models).
 
 The frontmatter pins a full id (`claude-opus-5`, not `opus`) so the default tiering survives alias
