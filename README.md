@@ -26,7 +26,7 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 | 5 | QA / mutation testing | `qa` | Opus 5 |
 | 6 | Address QA | `coder` | Sonnet 5 |
 | 7 | Final review | `final-review` | Opus 5 |
-| 8 | Document, commit, push, report to the ticket | — | — |
+| 8 | Document, commit, push, file follow-ups, report to the ticket | — | — |
 
 Two cycles maximum. Work that will not converge in two rounds usually has a problem in its
 specification rather than its code, and a third round will not find it.
@@ -90,6 +90,13 @@ implementation, inside one file, differently in each.
 merged PR either way. The comment that matters is the one a cycle posts when it gives up, because
 the alternative is a ticket reading "in progress" forever, a branch nobody knows about, and
 someone finding out a week later. One comment, at the end, either way. Never a comment per step.
+
+**A follow-up is not filed until it has a number.** A cycle turns up real work it should not do,
+and the reflex is to write "filed as a follow-up" and move on. Said before the ticket exists, that
+sentence is the whole record — it reads as done, so nobody checks, and the finding is gone. Open
+the ticket, get the ID, then write the sentence. The judgement is which findings need scheduling
+rather than remembering: a backlog of speculative entries stops being read, so the ones that would
+only ever make sense beside this code stay in the ticket comment.
 
 **Reviewers get no write tools.** A reviewer that can edit what it is judging becomes a second
 unsupervised author.

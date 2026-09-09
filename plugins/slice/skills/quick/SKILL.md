@@ -50,3 +50,8 @@ on success and, more importantly, on failure or when you stop to propose the ful
 rules as [the full cycle](../cycle/SKILL.md): one comment, at the end, comment rather than
 transition, and never claim you updated a tracker you could not reach. Small changes are the ones
 whose tickets go stale, because nobody thinks a two-line fix needs reporting.
+
+A quick cycle that turns up something real but out of scope should open a ticket for it rather
+than mention it — the same rule, and it bites harder here, because a small change is exactly where
+"I noticed X while I was in there" gets said once and never written down. A follow-up is not filed
+until the tracker has given you an ID.

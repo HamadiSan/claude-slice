@@ -19,7 +19,7 @@ different models, bracketed by the ticket that asked for it.
 | 5 | QA / mutation testing | `slice-qa` | `qa` | Opus 5 |
 | 6 | Address QA | `slice-coder` | `coder` | Sonnet 5 |
 | 7 | Final review | `slice-reviewer` | `final-review` | Opus 5 |
-| 8 | Document, commit, push, report to the ticket | you | — | — |
+| 8 | Document, commit, push, file follow-ups, report to the ticket | you | — | — |
 
 ## Choosing the model for each role
 
@@ -109,6 +109,30 @@ is the step that gets skipped.
 Post it if the run ends **for any reason**: two cycles without convergence, a gate you could not
 satisfy, the user calling it off, or an error that stopped the run.
 
+**Follow-ups get their own ticket, not a sentence.** A cycle generates work it should not do:
+a finding that is real but out of scope, a defect in a neighbouring package, a design change too
+large for this slice. Some of that belongs in the ticket comment; some of it needs to be
+*scheduled*, and a comment on a closed ticket is never scheduled. Open a ticket when the finding
+needs someone to plan it — it will be worked separately, it blocks or anticipates another ticket,
+or it is a correctness, security or data-integrity property. Leave it in the comment when it is
+context for whoever next touches this code, and would only ever be read next to it.
+
+Do not open one per finding. Three tickets nobody triages are worse than three sentences someone
+reads, and a backlog full of speculative entries stops being looked at. If you cannot say who
+would pick it up and why it matters, it is a comment.
+
+The ticket has to carry enough that a stranger can act on it: what the defect is, the measured
+consequence rather than the theory, where it lives, and what "done" means. Link it back to the
+cycle that found it, and link it from the originating ticket's comment. If it is blocked by the
+work you just landed, say so in the tracker rather than in prose.
+
+**A follow-up is not filed until it has an identifier.** Never tell the user, a ticket, or a
+commit message that something is "filed as a follow-up" until the tracker has returned an ID —
+saying it first and creating it later means it does not exist, and the sentence reads as though
+it does. This is the same rule as *never report a ticket as updated when the write did not land*,
+and it fails the same way: the work feels finished, so the bookkeeping gets narrated instead of
+done. If the tracker is unreachable, say the follow-up is unfiled and give the user the text.
+
 **Comment; do not silently transition.** Moving a ticket to In Review or Done touches other
 people's boards and fires automation you cannot see. Transition it when the user asked you to or
 the project's convention is written down — otherwise name the transition you would make and let
@@ -148,7 +172,8 @@ on the ticket before you hand it back.
 **Write down every finding you decline.** A finding recorded in a comment, a test name, or a
 spec's open-questions section survives being deprioritised. One that is only argued in a review and
 then declined does not exist a week later — and the ones that come back are the ones nobody wrote
-down. This costs a sentence and it is the cheapest insurance in the cycle.
+down. This costs a sentence and it is the cheapest insurance in the cycle. Where the declined
+finding needs scheduling rather than remembering, it gets its own ticket — see **The ticket**.
 
 ## What each gate is for
 
@@ -166,8 +191,9 @@ A single combined "quality" gate would be worse than both.
 
 Step 8 is yours. Write the commit message so it explains **what the gates found and why it
 mattered** — the defects and their consequences, not a list of files. That message is the only
-durable record of why the code is shaped as it is, and it is worth more than the diff. Then post
-the ticket comment, and only then tell the user you are done.
+durable record of why the code is shaped as it is, and it is worth more than the diff. Then open
+any follow-up tickets the run earned, so the closing comment can link them by ID rather than
+promise them; then post that comment, and only then tell the user you are done.
 
 If the project keeps a workflow or decisions document, add anything the cycle taught you about
 the process itself.

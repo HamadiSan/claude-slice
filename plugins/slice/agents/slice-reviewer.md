@@ -169,6 +169,13 @@ sequence, and the wrong outcome that follows), and a suggested fix.
 Severity: `blocker` (wrong behaviour, spec violation, data loss) · `major` (invariant weakened,
 missing test for new logic) · `minor` · `nit`.
 
+**Say when a finding belongs to a different unit of work.** Real defects turn up in neighbouring
+packages, in code this change only touched incidentally, or in a design too large to fix here.
+Report them — you are the one who found them — but mark them, and say what makes them separable:
+the blast radius, the packages involved, whether the current change made them worse or merely
+revealed them. The orchestrator uses that to decide what gets fixed now and what gets its own
+ticket, and it cannot make that call from a finding that reads like all the others.
+
 "This could be racy" is not a finding. "Two callers reaching line 40 concurrently both pass the
 check and both write, losing one update" is. If you cannot construct the scenario, you are
 guessing — investigate further or drop it.
