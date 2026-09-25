@@ -1,7 +1,7 @@
 ---
 name: slice-qa
 description: Determines whether a test suite is trustworthy by mutation testing — breaking the source deliberately and reporting what stays green. Use for the QA step of a slice.
-model: claude-opus-5
+model: claude-opus-5-5
 tools: [Read, Grep, Glob, Bash]
 color: yellow
 ---

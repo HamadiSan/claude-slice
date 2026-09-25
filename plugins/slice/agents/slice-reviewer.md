@@ -1,7 +1,7 @@
 ---
 name: slice-reviewer
 description: Reviews an implementation against its specification for correctness, and for claims that do not match the code. Read-only. Use for the review and final-review steps of a slice.
-model: claude-opus-5
+model: claude-opus-5-5
 tools: [Read, Grep, Glob, Bash]
 color: red
 ---

@@ -12,19 +12,19 @@ different models, bracketed by the ticket that asked for it.
 | # | Step | Agent | Role | Model (default) |
 |---|---|---|---|---|
 | 0 | Pick up the ticket | you | — | — |
-| 1 | Write the spec | `slice-spec` | `spec` | Fable 5 |
+| 1 | Write the spec | `slice-spec` | `spec` | Fable 5.1 |
 | 2 | Implement it | `slice-coder` | `coder` | Sonnet 5 |
-| 3 | Code review | `slice-reviewer` | `reviewer` | Opus 5 |
+| 3 | Code review | `slice-reviewer` | `reviewer` | Opus 5.5 |
 | 4 | Address the review | `slice-coder` | `coder` | Sonnet 5 |
-| 5 | QA / mutation testing | `slice-qa` | `qa` | Opus 5 |
+| 5 | QA / mutation testing | `slice-qa` | `qa` | Opus 5.5 |
 | 6 | Address QA | `slice-coder` | `coder` | Sonnet 5 |
-| 7 | Final review | `slice-reviewer` | `final-review` | Opus 5 |
+| 7 | Final review | `slice-reviewer` | `final-review` | Opus 5.5 |
 | 8 | Document, commit, push, file follow-ups, report to the ticket | you | — | — |
 
 ## Choosing the model for each role
 
-**The Model column is a default, not a fixture.** The `Agent` tool's `model` parameter overrides
-whatever an agent definition declares, so every role is selectable per invocation or per project.
+**The Model column is a default, not a fixture.** Every role is selectable per invocation or per
+project.
 
 **Resolve each role's model in this order**, highest priority first:
 
@@ -32,7 +32,10 @@ whatever an agent definition declares, so every role is selectable per invocatio
    `/slice:cycle OXN-13 --reviewer=opus --coder=haiku`.
 2. **The project's `.slice.json`**, if one exists at the repo root:
    ```json
-   { "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
+   {
+     "models": { "spec": "fable", "coder": "sonnet", "reviewer": "claude-opus-5-5" },
+     "effort": { "reviewer": "high" }
+   }
    ```
    It is checked in, so a team shares one answer instead of each person remembering flags.
 3. **The user's `~/.claude/slice.json`**, same shape — their standing preference across every
@@ -43,31 +46,79 @@ Read the two files once, at the start of the run. Either may set any subset of r
 role by role rather than taking the first file that exists whole. `/slice:models` is the
 interactive way to set them; nothing here requires that they were written by it.
 
-Then **pass the resolved model explicitly on every `Agent` call**, even when it matches the
-default. Relying on the frontmatter makes a run you cannot describe afterwards; passing it means
-you can say in the ticket comment which models actually ran.
+**Roles.** Four — `spec`, `coder`, `reviewer`, `qa` — plus an optional `final-review`, which falls
+back to `reviewer` when unset. One `coder` setting covers all three of its steps. Splitting
+`final-review` off is worth it when someone wants a cheap first pass and an expensive last word,
+since that is the gate that says land or do not land.
 
-**Roles and values.** Four roles — `spec`, `coder`, `reviewer`, `qa` — plus an optional
-`final-review`, which falls back to `reviewer` when unset. One `coder` setting covers all three
-of its steps. Splitting `final-review` off is worth it when someone wants a cheap first pass and
-an expensive last word, since that is the gate that says land or do not land.
+### Two kinds of value, and two different routes
 
-Values are the short aliases the `Agent` tool accepts: `opus`, `sonnet`, `haiku`, `fable`. The
-agent files spell their defaults as full IDs (`claude-opus-5`) — translate to the alias rather
-than passing the long form through, which the tool will reject.
+A role's model may be written either way, and **which one is written decides how it reaches the
+agent**:
 
-**Name what you resolved before step 1**, in one line. Someone who set `coder=haiku` in
-`.slice.json` three weeks ago and forgot deserves to learn that before spending a cycle, not
-while reading the diff.
+| Value | Example | How it is delivered |
+|---|---|---|
+| **Short alias** | `opus`, `sonnet`, `haiku`, `fable` | Pass it on the `Agent` call's `model` parameter. |
+| **Full model id** | `claude-opus-5-5`, `claude-haiku-4-5` | **Omit the `model` parameter.** The id must already be that agent's frontmatter, and the frontmatter is what carries it. |
+
+This split is not a style preference. **The `Agent` tool's `model` parameter accepts only the four
+aliases and rejects anything else outright** — a full id passed there fails validation; it does not
+degrade to something close. Agent frontmatter is the only place a full id is accepted. So a
+full-id role runs by *not* overriding the frontmatter, which means the config and the frontmatter
+have to agree.
+
+**Check that they agree, and stop if they do not.** When a role resolves to a full id that is not
+what that agent's frontmatter says, the id cannot be delivered. Say so and stop. Passing the
+nearest alias instead is silently running a different model.
+
+Prefer an **alias** when the intent is "the current best of this family", and let it drift upward
+on purpose. Prefer a **full id** when the intent is one specific model — which makes the next rule
+load-bearing.
+
+### A full id fails silently. Probe it.
+
+**When a full model id is unavailable to the account, the subagent does not error. It falls back to
+the inherited model and runs.** Nothing announces the substitution. An entire cycle can therefore
+be configured for one model, complete on another, and report the first.
+
+So **probe each distinct full id once, before step 1**: spawn that agent with a throwaway prompt
+asking only for the model id named in its own system prompt, and compare it against what was
+resolved. Two or three short calls cost nothing beside a full cycle, and they turn a silent
+substitution into a stated fact.
+
+**Report the model each role actually ran on, not the one it was configured with.** An unverified
+id in a ticket comment is a claim the run cannot support — the exact defect class these gates
+exist to catch, committed by the cycle itself.
+
+### Effort
+
+Effort is **not** a parameter on the `Agent` tool, and there is no per-agent effort field. It comes
+from Claude Code's own settings:
+
+- `effortLevel` — the global default;
+- `modelSettings.<full-model-id>.effortLevel` — per model, overriding the global;
+- `maxEffortLevel` — a cap.
+
+Two consequences follow. Both are real limits, not gaps to be worked around:
+
+**Effort attaches to a model, not to a role.** Two roles on the same model necessarily get the same
+effort. If the config asks for two different efforts on one model, that is unsatisfiable — say so
+and stop, rather than honouring one of them quietly.
+
+**This plugin cannot set effort. It resolves, checks and reports it.** The `effort` block is a
+statement of intent, and settings are what decide. At resolve time read the effective
+`effortLevel` for each role's model and **compare**. When they disagree, name both values and say
+which won; do not restate the config as though it were the outcome.
+
+**Name what you resolved before step 1**, one line per role: the model, whether it arrived as an
+alias or a full id, where the value came from, and the effective effort. Someone who set
+`coder=haiku` in `.slice.json` three weeks ago and forgot deserves to learn that before spending a
+cycle, not while reading the diff.
 
 **Reject a value you do not recognise instead of falling back to the default.** A typo'd
-`--reviewer=opus5` that silently runs something else is precisely the failure nobody catches
-until a gate has already missed something.
-
-**If asked to run every role on one model, do it — and say once what it costs.** This cycle's
-premise is that judgement and implementation come from *different* models; the gates earn their
-keep largely by not sharing the coder's blind spots. One model everywhere is a cheaper, weaker
-cycle. That is the user's call to make: recommend against it once, then run what they asked for.
+`--reviewer=opus5` that silently runs something else is precisely the failure nobody catches until
+a gate has already missed something. Recognised means one of the four aliases, or a full id shaped
+`claude-<family>-<version>`. Anything else is a typo, not a model.
 
 ## Before you start: propose, do not assume
 

@@ -1,7 +1,7 @@
 ---
 name: slice-spec
 description: Writes a technical specification for a unit of work before any code exists, grounded in the actual codebase. Use for the spec step of a slice.
-model: claude-fable-5
+model: claude-fable-5-1
 tools: [Read, Grep, Glob, Bash, Write]
 color: cyan
 ---
