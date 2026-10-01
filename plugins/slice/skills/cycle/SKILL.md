@@ -16,7 +16,7 @@ different models, bracketed by the ticket that asked for it.
 | 2 | Implement it | `slice-coder` | `coder` | Sonnet 5 |
 | 3 | Code review | `slice-reviewer` | `reviewer` | Opus 5.5 |
 | 4 | Address the review | `slice-coder` | `coder` | Sonnet 5 |
-| 5 | QA / mutation testing | `slice-qa` | `qa` | Opus 5.5 |
+| 5 | QA / mutation testing (when warranted) | `slice-qa` | `qa` | Sonnet 5 |
 | 6 | Address QA | `slice-coder` | `coder` | Sonnet 5 |
 | 7 | Final review | `slice-reviewer` | `final-review` | Opus 5.5 |
 | 8 | Document, commit, push, file follow-ups, report to the ticket | you | — | — |
@@ -225,6 +225,36 @@ spec's open-questions section survives being deprioritised. One that is only arg
 then declined does not exist a week later — and the ones that come back are the ones nobody wrote
 down. This costs a sentence and it is the cheapest insurance in the cycle. Where the declined
 finding needs scheduling rather than remembering, it gets its own ticket — see **The ticket**.
+
+## When QA runs, and how big it is
+
+QA is the step most worth its cost on code where a silent failure is expensive, and the one most
+easily wasted on code where it is not. Decide per change, before step 5, and say which way you
+decided and why.
+
+**Run it** when the change touches any of:
+- security, authorisation or tenant isolation, or anything that refuses a request;
+- persistence: SQL, migrations, ordering, idempotency, anything that writes;
+- a wire format, protocol or API contract another process depends on;
+- concurrency, timeouts, deadlines, retries or resource cleanup;
+- code that controls hardware or money.
+
+Also run it when the coder produced no mutation table of their own.
+
+**Skip it** when the change is documentation only, or presentational UI or small glue code, *and*
+the coder's own mutation table covers the new behaviour with named kills. When you skip it, ask the
+step-3 reviewer to run **up to five** mutants on the riskiest changed lines, aimed at what the
+coder's table missed. Then say "QA skipped: <reason>" in the ticket comment.
+
+**Size it.** The QA agent defaults to a budget of 20 mutants on changed code, ranked by
+consequence, and runs them through the plugin's `scripts/mutate.py` runner so test logs stay out
+of its context. Raise the budget in the prompt only for a change that warrants it, such as a new
+storage engine or an auth layer, and say why.
+
+**It runs on Sonnet by default.** Applying mutants and reading a verdict per line is mechanical.
+The judgement goes into choosing the mutants and explaining the survivors, and the budget keeps
+that small. Set `qa` to `opus` in `.slice.json` for a project where QA has to reason about subtle
+concurrency or cryptography.
 
 ## What each gate is for
 
