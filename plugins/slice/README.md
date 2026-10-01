@@ -11,7 +11,8 @@ plugins/slice/
     ├── slice-spec.md       Fable 5.1 — reads the codebase, then decides, decisively
     ├── slice-coder.md      Sonnet 5  — implements and reworks, licensed to disagree
     ├── slice-reviewer.md   Opus 5.5  — read-only; hunts claims that do not match code
-    └── slice-qa.md         Opus 5.5  — mutation-tests on a copy of the tree
+    └── slice-qa.md         Sonnet 5  — mutation-tests on a copy of the tree, 20-mutant budget,
+                                        through scripts/mutate.py
 ```
 
 Those models are **defaults**. `/slice:models` shows what is in effect, where each value came

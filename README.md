@@ -23,7 +23,7 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 | 2 | Implement it | `coder` | Sonnet 5 |
 | 3 | Code review | `reviewer` | Opus 5 |
 | 4 | Address the review | `coder` | Sonnet 5 |
-| 5 | QA / mutation testing | `qa` | Opus 5 |
+| 5 | QA / mutation testing (when warranted) | `qa` | Sonnet 5 |
 | 6 | Address QA | `coder` | Sonnet 5 |
 | 7 | Final review | `final-review` | Opus 5 |
 | 8 | Document, commit, push, file follow-ups, report to the ticket | — | — |
@@ -46,7 +46,7 @@ is not "what should this be" but "why is it that". Choices persist to one of two
 same shape and both free to set any subset of roles:
 
 ```json
-{ "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "opus" } }
+{ "models": { "spec": "fable", "coder": "sonnet", "reviewer": "opus", "qa": "sonnet" } }
 ```
 
 - `.slice.json` at the repo root — this project, checked in, shared with the team

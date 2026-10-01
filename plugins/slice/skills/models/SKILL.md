@@ -27,8 +27,8 @@ Both files use the same shape, and both may set any subset of roles:
 
 ```json
 {
-  "models": { "spec": "fable", "coder": "sonnet", "reviewer": "claude-opus-5-5", "qa": "claude-opus-5-5" },
-  "effort": { "reviewer": "high", "qa": "high" }
+  "models": { "spec": "fable", "coder": "sonnet", "reviewer": "claude-opus-5-5", "qa": "sonnet" },
+  "effort": { "reviewer": "high" }
 }
 ```
 
