@@ -1,7 +1,7 @@
 # claude-slice
 
 A Claude Code plugin that runs a unit of work through a multi-agent cycle — spec, implement,
-review, rework, mutation-test QA, rework, final review, land — with judgement and implementation
+review, one rework round, final review, land — with judgement and implementation
 deliberately done by different models, and the outcome reported back to the ticket that asked
 for it.
 
@@ -11,7 +11,7 @@ claude plugin install slice@claude-slice
 ```
 
 Then just work. The skill surfaces itself when you start something substantial and **proposes**
-the cycle rather than running it — seven agents is not a decision to make on your behalf. Or ask
+the cycle rather than running it — four agent runs is not a decision to make on your behalf. Or ask
 for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 
 ## The cycle
@@ -21,15 +21,22 @@ for it: `/slice:cycle` for the full pass, `/slice:quick` for a small change.
 | 0 | Pick up the ticket | — | — |
 | 1 | Write the spec | `spec` | Fable 5 |
 | 2 | Implement it | `coder` | Sonnet 5 |
-| 3 | Code review | `reviewer` | Opus 5 |
-| 4 | Address the review | `coder` | Sonnet 5 |
-| 5 | QA / mutation testing (when warranted) | `qa` | Sonnet 5 |
-| 6 | Address QA | `coder` | Sonnet 5 |
-| 7 | Final review | `final-review` | Opus 5 |
-| 8 | Document, commit, push, file follow-ups, report to the ticket | — | — |
+| 3 | Code review, with up to five mutants on risky code | `reviewer` | Opus 5 |
+| 4 | Address the review — the one rework round | `coder` | Sonnet 5 |
+| 5 | Final review: were the findings fixed? | `final-review` | Opus 5 |
+| 6 | Document, commit, push, file follow-ups, report to the ticket | — | — |
 
-Two cycles maximum. Work that will not converge in two rounds usually has a problem in its
-specification rather than its code, and a third round will not find it.
+**One review, one rework round.** After it, a blocker gets one narrow fix that the orchestrator
+verifies itself; everything else becomes a follow-up ticket or a line in the closing comment, not
+another round. Comment wording blocks a merge only when it would mislead about security or data.
+
+**Mutation testing runs once**, in the first review, on risky code only — security, persistence,
+wire formats, concurrency, hardware or money — and at most five mutants. The coder runs none and
+the final review runs none. A full QA sweep (`slice-qa`, 20 mutants) runs only when you ask for it
+on a slice, with `--qa`.
+
+**Tests pin behaviour, not implementation**: the contract and its boundaries; for UI, goldens plus
+a few semantics tests, and no pixel-arithmetic tests unless a real bug needs one.
 
 ## Choosing the models
 
@@ -63,17 +70,14 @@ starts, and an unrecognised value is rejected rather than silently replaced by a
 You can run every role on one model. It is a cheaper, weaker cycle — the gates earn their keep
 largely by not sharing the coder's blind spots — so the skill will say so once and then do it.
 
-## Why two gates and not one
+## Why mutation testing lives inside the review
 
-Review and QA find **different classes** of defect, consistently:
-
-- **Review** finds claims that do not match code — a comment promising behaviour the code lacks,
-  an invariant asserted in prose and nowhere else, validation placed where it can never fire.
-- **QA** finds untested behaviour, by breaking the source and seeing what stays green. It
-  repeatedly shows that a high coverage number overstates the real position, because a line
-  counts as covered when a test merely reaches it.
-
-A single combined "quality" gate would be worse than both.
+Review finds claims that do not match code — a comment promising behaviour the code lacks, an
+invariant asserted in prose and nowhere else, validation placed where it can never fire. A few
+mutants on the risky lines find something review alone does not: tests that pass for the wrong
+reason, where a line counts as covered because a test merely reaches it. Running them once, by the
+agent that has just read the code against the spec, gets most of that value. Running them again in
+the coder, the final review and a separate QA step mostly paid for the same answer three times.
 
 ## What this encodes
 
@@ -101,7 +105,7 @@ only ever make sense beside this code stay in the ticket comment.
 **Reviewers get no write tools.** A reviewer that can edit what it is judging becomes a second
 unsupervised author.
 
-**QA works on a copy, never the real tree.** A QA agent that backs up, mutates and restores will
+**Mutants run on a copy, never the real tree.** An agent that backs up, mutates and restores will
 silently revert whatever landed while it ran, and the damage surfaces much later as an unrelated
 build error.
 

@@ -1,6 +1,6 @@
 ---
 name: slice-qa
-description: Determines whether a test suite is trustworthy by mutation testing — breaking the source deliberately and reporting what stays green. Use for the QA step of a slice.
+description: Determines whether a test suite is trustworthy by mutation testing — breaking the source deliberately and reporting what stays green. Optional; run only when the user asks for a full QA pass on a slice, typically one that is mostly security or persistence code.
 model: sonnet
 tools: [Read, Grep, Glob, Bash]
 color: yellow
@@ -38,8 +38,8 @@ failure would hurt most, and only on code this change added or modified (`git di
 4. concurrency, timeouts, deadlines, resource cleanup;
 5. everything else.
 
-Read the coder's own mutation table first, if the change has one, and **do not repeat it**. A
-mutant the coder already ran and killed tells you nothing new. Aim at what their table skipped:
+Read the first review's mutants first, if it ran any, and **do not repeat them**. A
+mutant the reviewer already ran and killed tells you nothing new. Aim at what those mutants skipped:
 the categories above it did not reach, the fixtures it did not question, and the fake it relied on.
 
 When the budget runs out, stop and list the next mutants you would have run, ranked. That list

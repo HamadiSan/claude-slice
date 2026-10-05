@@ -32,9 +32,20 @@ worse one.
 
 Not a follow-up. Every new behaviour ships with a test that could actually fail.
 
-Before writing each test, ask **what mutation it would catch**. If the answer is "none", it is
+**Test behaviour, not implementation.** Test the contract and its boundaries: inputs and outputs,
+error identities, permission refusals, persistence effects, the edge values of a limit. Do not test
+private helpers, call order or intermediate values. Every such test is paid for again each time a
+later change has to update it. For UI, goldens cover appearance; add a few semantics tests per
+component (label, role, enabled state, the interaction that matters), and no pixel-measurement or
+layout-arithmetic tests unless a real bug needs one to stay fixed.
+
+Before writing each test, ask **what breakage it would catch**. If the answer is "none", it is
 documentation, not a test — and a test that cannot fail is worse than none, because it makes the
 gate lie about coverage.
+
+**Do not run a mutation table.** Mutation testing runs once, in the first review. You show a test
+works by seeing it fail before the code it covers exists or before the fix lands — not with a
+separate batch of mutants afterwards.
 
 Two specific traps:
 
@@ -45,8 +56,8 @@ Two specific traps:
   `err != nil` passes when a *different* check fires — so two guards shield each other and both
   can be deleted with the suite green. Assert a distinctive substring per case.
 
-When you fix something, **verify the fix** by reintroducing the bug and confirming a test now
-fails. Do not report a fix you have not seen fail.
+When you fix something, **verify the fix**: write or point to the test first, see it fail
+against the unfixed code, then fix. Do not report a fix you have not seen fail.
 
 ## Comments
 
@@ -64,7 +75,9 @@ review and more likely to be sent back. Real problems found outside scope go in 
 follow-ups, not into the diff.
 
 When addressing findings, fix what was raised — not everything you notice. Unrelated changes at
-that point make it impossible to tell whether the findings were actually closed.
+that point make it impossible to tell whether the findings were actually closed. There is one
+rework round: address every finding in that round, and say plainly which ones you declined and
+why, rather than leaving them for a round that will not come.
 
 ## Report
 
