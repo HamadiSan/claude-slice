@@ -45,8 +45,10 @@ only survived whitespace changes.
 - **Validation that can never fire.** A check placed after the branch that would have caught it,
   a loop over something always empty, a guard unreachable because a type was inferred earlier.
   These read as safe and are not.
-- **Untested guarantees.** Where does the code promise something with nothing defending it? You
-  do not need to write the test, but naming the gap is a finding.
+- **Untested guarantees.** Where does the code promise *behaviour* — a contract, a refusal, a
+  persistence effect, a limit — with nothing defending it? Naming the gap is a finding. A gap in
+  how the code happens to be written (a private helper, call order, an intermediate value, a pixel
+  offset) is not: do not ask for tests that only pin implementation detail.
 - **Failure modes under the conditions this actually runs in** — unattended, on a shared box,
   after a crash, with malformed input from a model.
 
@@ -150,15 +152,41 @@ budget on the **defence around it** instead:
 - **Would making the mutation harmless beat making a test shout at it?** A test that fails when
   someone changes a spelling is worth less than code that is correct under every spelling.
 
-## Verify, do not assert
+## Mutants: first review only, risky code only, five at most
 
-If you claim something is untested, prove it: copy the repo to a scratch directory, delete the
-code, and show the suite stays green. A finding backed by a demonstration is worth ten
-plausible ones, and it costs you a minute.
+On a **first review** you are the only place mutation testing runs; the coder runs none and the
+final review runs none. Run **up to five** mutants, through the plugin's `scripts/mutate.py`, and
+only on changed lines that touch:
+
+- security, authorisation or tenant isolation, or anything that refuses a request;
+- persistence: SQL, migrations, ordering, idempotency, anything that writes;
+- a wire format, protocol or API contract another process depends on;
+- concurrency, timeouts, deadlines, retries or resource cleanup;
+- code that controls hardware or money.
+
+If the change touches none of those, run none and say so. Aim each mutant at the check most likely
+to be guarded by a test that cannot fail. A survivor is an ordinary finding: give the mutated line,
+why it survived, and the behaviour that is now undefended.
 
 **A build failure is not a caught mutation.** If your mutation does not compile, fix it so it
 does or discard it — counting compile errors as "the tests caught it" silently overstates the
 suite's strength, and counting them as "survived" overstates its weakness.
+
+## A final review is a check, not a second review
+
+When you are the **final review**, your question is narrow: *were the first review's findings
+fixed, and did the fixes break anything?* Read the diff since the first review, confirm each
+finding against its fix and its claim, grep the fix's own additions for the shape each finding
+described, and check the build and tests are green.
+
+Do not run mutants. Do not open new lines of inquiry into code the rework did not touch. If you
+see something new and serious anyway — a security hole, data loss, wrong behaviour — report it as
+a blocker. Report anything else new as a follow-up, not as a reason to withhold LAND.
+
+## Verify, do not assert
+
+If you claim something is untested, prove it, within the budget above: a mutant through the
+runner, or the scenario run once. A finding backed by a demonstration is worth ten plausible ones.
 
 ## Output
 
@@ -166,8 +194,15 @@ A verdict where one was asked for (**LAND** / **DO NOT LAND**), then findings ra
 first. For each: `file:line`, what is wrong, a **concrete failure scenario** (specific inputs or
 sequence, and the wrong outcome that follows), and a suggested fix.
 
-Severity: `blocker` (wrong behaviour, spec violation, data loss) · `major` (invariant weakened,
-missing test for new logic) · `minor` · `nit`.
+Severity: `blocker` (wrong behaviour, spec violation, data loss, a security hole) · `major`
+(invariant weakened, missing test for new behaviour on risky code) · `minor` · `nit`.
+
+**A comment that claims more than the code does is a `nit`**, unless it would mislead a reader
+about security or data — a check, an isolation or a guarantee the code does not provide. Then it
+is a `blocker`. Comment wording is otherwise never a reason to withhold LAND.
+
+There is **one** rework round. Only blockers can send work back after it. Rank and word your
+findings so the orchestrator can tell which is which at a glance.
 
 **Say when a finding belongs to a different unit of work.** Real defects turn up in neighbouring
 packages, in code this change only touched incidentally, or in a design too large to fix here.

@@ -1,12 +1,12 @@
 ---
 name: cycle
-description: Run a substantial piece of work through a full multi-agent cycle - spec, implement, review, rework, mutation-test QA, rework, final review, then land, then report the outcome back to the tracked ticket whether the cycle succeeded or failed. Use when implementing a new package, module, subsystem or feature of real size, or when the user asks for a thorough or high-assurance build. PROPOSE this before starting; do not run it unprompted, it is expensive.
-argument-hint: [what to build] [--role=model ...]
+description: Run a substantial piece of work through a full multi-agent cycle - spec, implement, review (with a few targeted mutants on risky code), one rework round, final review, then land, then report the outcome back to the tracked ticket whether the cycle succeeded or failed. Use when implementing a new package, module, subsystem or feature of real size, or when the user asks for a thorough or high-assurance build. PROPOSE this before starting; do not run it unprompted, it is expensive.
+argument-hint: [what to build] [--role=model ...] [--qa]
 ---
 
 # The slice cycle
 
-A unit of work goes through eight steps, with judgement and implementation deliberately done by
+A unit of work goes through six steps, with judgement and implementation deliberately done by
 different models, bracketed by the ticket that asked for it.
 
 | # | Step | Agent | Role | Model (default) |
@@ -14,12 +14,13 @@ different models, bracketed by the ticket that asked for it.
 | 0 | Pick up the ticket | you | — | — |
 | 1 | Write the spec | `slice-spec` | `spec` | Fable 5.1 |
 | 2 | Implement it | `slice-coder` | `coder` | Sonnet 5 |
-| 3 | Code review | `slice-reviewer` | `reviewer` | Opus 5.5 |
-| 4 | Address the review | `slice-coder` | `coder` | Sonnet 5 |
-| 5 | QA / mutation testing (when warranted) | `slice-qa` | `qa` | Sonnet 5 |
-| 6 | Address QA | `slice-coder` | `coder` | Sonnet 5 |
-| 7 | Final review | `slice-reviewer` | `final-review` | Opus 5.5 |
-| 8 | Document, commit, push, file follow-ups, report to the ticket | you | — | — |
+| 3 | Code review, with up to five mutants on risky code | `slice-reviewer` | `reviewer` | Opus 5.5 |
+| 4 | Address the review — **the one rework round** | `slice-coder` | `coder` | Sonnet 5 |
+| 5 | Final review: were the findings fixed? | `slice-reviewer` | `final-review` | Opus 5.5 |
+| 6 | Document, commit, push, file follow-ups, report to the ticket | you | — | — |
+
+A full mutation-testing QA pass (`slice-qa`) is **not** a step. It runs only when the user asks
+for it on a specific slice — see **Full QA, on request only**.
 
 ## Choosing the model for each role
 
@@ -47,7 +48,8 @@ role by role rather than taking the first file that exists whole. `/slice:models
 interactive way to set them; nothing here requires that they were written by it.
 
 **Roles.** Four — `spec`, `coder`, `reviewer`, `qa` — plus an optional `final-review`, which falls
-back to `reviewer` when unset. One `coder` setting covers all three of its steps. Splitting
+back to `reviewer` when unset. `qa` only matters when a full QA pass was asked for. One `coder`
+setting covers both of its steps. Splitting
 `final-review` off is worth it when someone wants a cheap first pass and an expensive last word,
 since that is the gate that says land or do not land.
 
@@ -122,12 +124,12 @@ a gate has already missed something. Recognised means one of the four aliases, o
 
 ## Before you start: propose, do not assume
 
-This is seven agents and, for a package of real size, a large amount of wall clock and tokens.
+This is four agent runs and, for a package of real size, a large amount of wall clock and tokens.
 **Tell the user roughly what it will cost and ask whether they want it**, unless they have
 already asked for the cycle by name.
 
 If the work is small — a bug fix, one function, a config change — say so and offer `/slice:quick`
-or just doing it directly. Running eight steps on a typo is a bad trade and reflects badly on the
+or just doing it directly. Running six steps on a typo is a bad trade and reflects badly on the
 tool.
 
 ## The ticket
@@ -143,7 +145,7 @@ there is genuinely no ticket, say so and carry on. Do not open one just to have 
 update.
 
 **At the end, exactly once, whichever way it went.** One comment, when the run is over — not a
-comment per step. A ticket narrating eight agent handoffs is noise, and the next person to open it
+comment per step. A ticket narrating every agent handoff is noise, and the next person to open it
 learns to skim past anything you wrote.
 
 On success the comment says what shipped, **what the gates found and why it mattered**, the commit
@@ -157,8 +159,8 @@ reading "in progress", a branch nobody knows exists, and someone finding out a w
 *before* you report back to the user — by then the run feels finished, which is exactly why this
 is the step that gets skipped.
 
-Post it if the run ends **for any reason**: two cycles without convergence, a gate you could not
-satisfy, the user calling it off, or an error that stopped the run.
+Post it if the run ends **for any reason**: a blocker left after the rework round, a gate you
+could not satisfy, the user calling it off, or an error that stopped the run.
 
 **Follow-ups get their own ticket, not a sentence.** A cycle generates work it should not do:
 a finding that is real but out of scope, a defect in a neighbouring package, a design change too
@@ -200,8 +202,8 @@ readable by more people than the repository is.
 ## Running it
 
 **Between every step, commit.** The tree must be committed before a gate agent starts. Gates must
-never see uncommitted work, and a QA agent that mutates and restores can otherwise revert work
-that landed while it ran. Commit messages at intermediate steps should say they are checkpoints.
+never see uncommitted work, and a gate that mutates and restores can otherwise revert work that
+landed while it ran. Commit messages at intermediate steps should say they are checkpoints.
 
 **Verify each agent's claims yourself.** Do not take "all tests pass" on trust — run the build,
 the tests and the linter after every step. An agent reporting success it did not achieve is rare
@@ -215,10 +217,30 @@ file itself; it will correctly refuse, and you will have spent a round trip on t
 Long findings pasted into a prompt lose their structure, and a file gives the fixer something to
 work through methodically.
 
-**Two cycles maximum.** If the final review still says DO NOT LAND after a second full pass, stop
-and bring it to the user. Work that will not converge in two rounds usually has a problem in its
-specification, not its code, and a third round will not find it. Stopping is an outcome: comment
-on the ticket before you hand it back.
+**One review, one rework round.** This is the rule that most decides what a cycle costs. Every
+extra round re-reads the code, re-runs the suites and invites a new batch of findings about the
+previous round's tests, and in practice the later rounds find little the first review did not.
+
+- The first review's findings go to the coder **once**, as one batch.
+- The final review checks that those findings were fixed and that the fix broke nothing. It does
+  not open new lines of inquiry and it runs no mutants.
+- What the final review still finds is sorted, not re-cycled:
+  - **A blocker** (wrong behaviour, a security hole, data loss, a red build) gets one narrow fix.
+    You verify that fix yourself — the build, the tests, the specific scenario — with no further
+    review round.
+  - **Everything else** — majors that are not blockers, minors, nits, test-coverage gaps — becomes
+    a follow-up ticket or a line in the closing comment. It does not start another round.
+- If the narrow fix does not resolve the blocker, stop and bring it to the user. Work that will
+  not converge in one round usually has a problem in its specification, not its code. Stopping is
+  an outcome: comment on the ticket before you hand it back.
+
+**Comment wording blocks a merge only when it would mislead about security or data** — a comment
+claiming a check, an isolation or a guarantee the code does not have. Any other comment that
+claims more than the code does is a nit: list it for the coder's single round if it is cheap,
+otherwise put it in the closing comment. It never earns a round of its own.
+
+**CI failures are not review rounds.** A red CI on the PR is fixed directly and verified by CI. It
+does not reopen the review.
 
 **Write down every finding you decline.** A finding recorded in a comment, a test name, or a
 spec's open-questions section survives being deprioritised. One that is only argued in a review and
@@ -226,51 +248,67 @@ then declined does not exist a week later — and the ones that come back are th
 down. This costs a sentence and it is the cheapest insurance in the cycle. Where the declined
 finding needs scheduling rather than remembering, it gets its own ticket — see **The ticket**.
 
-## When QA runs, and how big it is
+## Mutation testing: once, in the first review, on risky code
 
-QA is the step most worth its cost on code where a silent failure is expensive, and the one most
-easily wasted on code where it is not. Decide per change, before step 5, and say which way you
-decided and why.
+Mutation testing answers a question review alone cannot: *would the tests notice if this broke?*
+It finds tests that pass for the wrong reason — a check satisfied by a comment, a guard that does
+nothing in a release build, an assertion that can never fire. It is also expensive: every mutant is
+a rebuild and a test run, and every survivor tends to start another round of test writing.
 
-**Run it** when the change touches any of:
-- security, authorisation or tenant isolation, or anything that refuses a request;
-- persistence: SQL, migrations, ordering, idempotency, anything that writes;
-- a wire format, protocol or API contract another process depends on;
-- concurrency, timeouts, deadlines, retries or resource cleanup;
-- code that controls hardware or money.
+So it runs **in one place**, the first review (step 3), and nowhere else:
 
-Also run it when the coder produced no mutation table of their own.
+- **The reviewer runs up to five mutants**, through the plugin's `scripts/mutate.py`, only on
+  changed lines in these categories:
+  - security, authorisation or tenant isolation, or anything that refuses a request;
+  - persistence: SQL, migrations, ordering, idempotency, anything that writes;
+  - a wire format, protocol or API contract another process depends on;
+  - concurrency, timeouts, deadlines, retries or resource cleanup;
+  - code that controls hardware or money.
+- **A change with none of those** — documentation, presentational UI, glue — gets no mutants.
+- **A surviving mutant is an ordinary finding.** It goes into the one rework round with the rest.
+- **The coder runs no mutation table** and the final review runs no mutants. A coder proves a test
+  works by seeing it fail before the fix, not with a separate mutation run.
 
-**Skip it** when the change is documentation only, or presentational UI or small glue code, *and*
-the coder's own mutation table covers the new behaviour with named kills. When you skip it, ask the
-step-3 reviewer to run **up to five** mutants on the riskiest changed lines, aimed at what the
-coder's table missed. Then say "QA skipped: <reason>" in the ticket comment.
+Say in the ticket comment how many mutants ran and on what, or "no mutants: no risky code".
 
-**Size it.** The QA agent defaults to a budget of 20 mutants on changed code, ranked by
-consequence, and runs them through the plugin's `scripts/mutate.py` runner so test logs stay out
-of its context. Raise the budget in the prompt only for a change that warrants it, such as a new
-storage engine or an auth layer, and say why.
+## Full QA, on request only
 
-**It runs on Sonnet by default.** Applying mutants and reading a verdict per line is mechanical.
-The judgement goes into choosing the mutants and explaining the survivors, and the budget keeps
-that small. Set `qa` to `opus` in `.slice.json` for a project where QA has to reason about subtle
-concurrency or cryptography.
+`slice-qa` runs a full sweep — a 20-mutant budget, ranked by consequence, on a copy of the tree.
+It runs **only when the user asks for it** on a specific slice, with `--qa` or in words. Suggest it,
+once, when a slice is mostly security or persistence code — an auth layer, RLS policies, a new
+storage engine — and let the user decide. When it runs, it sits between steps 4 and 5, its
+survivors go to the coder in the same single rework round where possible, and it runs on Sonnet by
+default. Set `qa` to `opus` for a project where QA has to reason about subtle concurrency or
+cryptography.
+
+## What tests to ask for
+
+Tokens spent on tests that pin implementation detail are spent twice: once to write them, and again
+every time a later change has to update them. Ask for, and accept, tests of **behaviour**:
+
+- **Test the contract and its boundaries**: inputs and outputs, error identities, permission
+  refusals, persistence effects, the edge values of a limit. Not private helpers, call order or
+  intermediate values.
+- **UI**: goldens for appearance, plus a few semantics tests per component — label, role, enabled
+  state, the one interaction that matters. No pixel-measurement or layout-arithmetic tests unless
+  a real bug needs one to stay fixed.
+- **No test per review comment.** A reviewer naming a gap is not an instruction to add a test for
+  it; add one when the gap is behaviour a user or another system depends on.
+
+The reviewer should hold the coder to this, and should not ask for tests that only pin how the code
+happens to be written.
 
 ## What each gate is for
 
-Review and QA reliably find **different classes** of defect, which is why both run:
-
 - **Review** finds claims that do not match code — a comment promising behaviour the
-  implementation lacks, an invariant asserted in prose and nowhere else. Also validation that can
-  never fire.
-- **QA** finds untested behaviour, by mutating the source and seeing what stays green. It
-  repeatedly demonstrates that a high coverage number overstates the real position.
-
-A single combined "quality" gate would be worse than both.
+  implementation lacks, an invariant asserted in prose and nowhere else, validation that can never
+  fire — and, through its few mutants, the tests on risky code that would not notice a regression.
+- **The final review** confirms the findings were fixed and nothing regressed. It is a check, not a
+  second review.
 
 ## Landing
 
-Step 8 is yours. Write the commit message so it explains **what the gates found and why it
+Step 6 is yours. Write the commit message so it explains **what the gates found and why it
 mattered** — the defects and their consequences, not a list of files. That message is the only
 durable record of why the code is shaped as it is, and it is worth more than the diff. Then open
 any follow-up tickets the run earned, so the closing comment can link them by ID rather than

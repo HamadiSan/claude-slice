@@ -4,15 +4,16 @@ See the [repository README](../../README.md) for what this is and why.
 
 ```
 plugins/slice/
-├── skills/cycle/SKILL.md   the full eight-step cycle, bracketed by the ticket
+├── skills/cycle/SKILL.md   the six-step cycle, bracketed by the ticket
 ├── skills/quick/SKILL.md   the four-step version for small changes
 ├── skills/models/SKILL.md  interactive picker: which model each role runs on
 └── agents/
     ├── slice-spec.md       Fable 5.1 — reads the codebase, then decides, decisively
     ├── slice-coder.md      Sonnet 5  — implements and reworks, licensed to disagree
-    ├── slice-reviewer.md   Opus 5.5  — read-only; hunts claims that do not match code
-    └── slice-qa.md         Sonnet 5  — mutation-tests on a copy of the tree, 20-mutant budget,
-                                        through scripts/mutate.py
+    ├── slice-reviewer.md   Opus 5.5  — read-only; hunts claims that do not match code, and runs
+    │                                   up to five mutants on risky code in the first review
+    └── slice-qa.md         Sonnet 5  — optional full QA sweep, on request only: 20 mutants on a
+                                        copy of the tree, through scripts/mutate.py
 ```
 
 Those models are **defaults**. `/slice:models` shows what is in effect, where each value came
